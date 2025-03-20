@@ -66,10 +66,12 @@ int OnStart(void)
    if(inpFilesCommon)
      {
       FolderCreate(__FILE__, FILE_COMMON);
-      if(StringFind(inpFileName, "_Symbol") == 0 || StringFind(inpFileName, "Symbol()") == 0) // _Symbol found
+      if(StringFind(inpFileName, "_Symbol") == 0 || StringFind(inpFileName, "Symbol()") == 0 || StringLen(inpFileName) == 0) // _Symbol found
         {
          filename = __FILE__+
                     "/"+
+                    AccountInfoString(ACCOUNT_SERVER)+
+                    "_"+
                     _Symbol+
                     "_"+
                     StringFormat("%s_%s", TimeToString(inpDtStart, TIME_DATE), TimeToString(inpDtEnd, TIME_DATE))+
