@@ -22,17 +22,38 @@ int OnStart(void)
       return 0;
      }
 
-// Find the last tick of the day which represents the closing time
+// Process ticks day by day to find closing times
+   datetime currentDate = 0;
    datetime lastTickTime = 0;
+
    for(int i = 0; i < tickCount; i++)
      {
+      datetime tickDate = ticks[i].time;
+      MqlDateTime tickStruct;
+      TimeToStruct(tickDate, tickStruct);
+      tickStruct.hour = 0;
+      tickStruct.min = 0;
+      tickStruct.sec = 0;
+      datetime normalizedDate = StructToTime(tickStruct);
+
+      // If we've moved to a new day, save the last tick time of previous day
+      if(normalizedDate != currentDate && currentDate != 0 && lastTickTime != 0)
+        {
+         ArrayResize(closeTimes, ArraySize(closeTimes) + 1);
+         closeTimes[ArraySize(closeTimes) - 1] = lastTickTime;
+         lastTickTime = 0;
+        }
+
+      // Update tracking variables
+      currentDate = normalizedDate;
       if(ticks[i].time > lastTickTime)
         {
          lastTickTime = ticks[i].time;
         }
      }
 
-   if(lastTickTime > 0)
+// Don't forget to save the last day's closing time
+   if(lastTickTime != 0)
      {
       ArrayResize(closeTimes, ArraySize(closeTimes) + 1);
       closeTimes[ArraySize(closeTimes) - 1] = lastTickTime;
@@ -42,15 +63,23 @@ int OnStart(void)
    int fileHandle;
    if(inpFilesCommon)
      {
+      Print(StringFind(inpFileName, ".csv"));
+      Print(StringLen(inpFileName) - 4);
       FolderCreate(__FILE__, FILE_COMMON);
-      filename = __FILE__+"/"+inpFileName + ".csv";
-      fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON);
+      filename = __FILE__+
+                 "/"+
+                 ((StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ? inpFileName : StringSubstr(inpFileName, 0, StringLen(inpFileName) - 4)) +
+                 StringFormat("%s-%s", TimeToString(inpDtStart, TIME_DATE), TimeToString(inpDtEnd, TIME_DATE)) +
+                 ((StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ? "" : ".csv");
+      fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, CharToString(44));
      }
    else
      {
       FolderCreate(__FILE__);
-      filename = inpFileName + ".csv";
-      fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI);
+      filename = inpFileName +
+                 StringFormat("%s-%s", TimeToString(inpDtStart, TIME_DATE), TimeToString(inpDtEnd, TIME_DATE)) +
+                 ((StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ? "" : ".csv");
+      fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI, CharToString(44));
      }
 
    if(fileHandle == INVALID_HANDLE)
