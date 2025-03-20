@@ -4,8 +4,10 @@
 #include <errordescription.mqh>
 
 //+------------------------------------------------------------------+
+#property copyright "Copyright @davdcsam"
+#property link      "https://github.com/davdcsam/SymbolInfoSessionTrade"
+#property version   "1.00"
 #property icon "res/sistfamily.ico"
-#property script_show_inputs true
 
 //+------------------------------------------------------------------+
 datetime closeTimes[];
@@ -63,14 +65,25 @@ int OnStart(void)
    int fileHandle;
    if(inpFilesCommon)
      {
-      Print(StringFind(inpFileName, ".csv"));
-      Print(StringLen(inpFileName) - 4);
       FolderCreate(__FILE__, FILE_COMMON);
-      filename = __FILE__+
-                 "/"+
-                 ((StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ? inpFileName : StringSubstr(inpFileName, 0, StringLen(inpFileName) - 4)) +
-                 StringFormat("%s-%s", TimeToString(inpDtStart, TIME_DATE), TimeToString(inpDtEnd, TIME_DATE)) +
-                 ((StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ? "" : ".csv");
+      if(StringFind(inpFileName, "_Symbol") == 0 || StringFind(inpFileName, "Symbol()") == 0) // _Symbol found
+        {
+         filename = __FILE__+
+                    "/"+
+                    _Symbol+
+                    "_"+
+                    StringFormat("%s_%s", TimeToString(inpDtStart, TIME_DATE), TimeToString(inpDtEnd, TIME_DATE))+
+                    ".csv";
+        }
+      else
+        {
+         filename = __FILE__+
+                    "/"+
+                    (
+                       (StringFind(inpFileName, ".csv") == StringLen(inpFileName) - 4) ?
+                       inpFileName : inpFileName+".csv"
+                    );
+        }
       fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, CharToString(44));
      }
    else
