@@ -4,28 +4,14 @@
 #include <errordescription.mqh>
 
 //+------------------------------------------------------------------+
-class SessionInfo
-  {
-public:
-                     SessionInfo() {};
-                    ~SessionInfo() {};
-
-   datetime          date;
-   datetime          closeTime;
-
-   const SessionInfo *Clone()
-     {
-      SessionInfo *temp = new SessionInfo();
-      temp.date = date;
-      temp.closeTime = closeTime;
-      return temp;
-     }
-  };
-
-SessionInfo sessions[];
+#property icon "res/sistfamily.ico"
+#property script_show_inputs true
 
 //+------------------------------------------------------------------+
-int OnInit(void)
+datetime closeTimes[];
+
+//+------------------------------------------------------------------+
+int OnStart(void)
   {
    MqlTick ticks[];
 // Get ticks for the current day
@@ -33,7 +19,7 @@ int OnInit(void)
    if(tickCount <= 0)
      {
       Print("Failed to get ticks for ", TimeToString(inpDtStart), " to ", TimeToString(inpDtEnd)," Error: ", ErrorDescription(GetLastError()));
-      return INIT_FAILED;
+      return 0;
      }
 
 // Find the last tick of the day which represents the closing time
@@ -48,24 +34,16 @@ int OnInit(void)
 
    if(lastTickTime > 0)
      {
-      SessionInfo session;
-      session.date = currentDate;
-      session.closeTime = lastTickTime;
-      ArrayResize(sessions, ArraySize(sessions) + 1);
-      sessions[ArraySize(sessions) - 1] = session;
+      ArrayResize(closeTimes, ArraySize(closeTimes) + 1);
+      closeTimes[ArraySize(closeTimes) - 1] = lastTickTime;
      }
-   return(INIT_SUCCEEDED);
-  }
 
-//+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
    string filename;
    int fileHandle;
    if(inpFilesCommon)
      {
       FolderCreate(__FILE__, FILE_COMMON);
-      filename = __FILE__+"//"inpFileName + ".csv";
+      filename = __FILE__+"/"+inpFileName + ".csv";
       fileHandle = FileOpen(filename, FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON);
      }
    else
@@ -78,17 +56,18 @@ void OnDeinit(const int reason)
    if(fileHandle == INVALID_HANDLE)
      {
       Print("Failed to open file: ", ErrorDescription(GetLastError()));
-      return;
+      return 0;
      }
 
    FileWrite(fileHandle, "Date", "Close Time");
-   for(int i = 0; i < ArraySize(sessions); i++)
+   for(int i = 0; i < ArraySize(closeTimes); i++)
      {
       FileWrite(fileHandle,
-                TimeToString(sessions[i].date),
-                TimeToString(sessions[i].closeTime)
+                TimeToString(closeTimes[i], TIME_DATE),
+                TimeToString(closeTimes[i], TIME_MINUTES | TIME_SECONDS)
                );
      }
    FileClose(fileHandle);
+   return 1;
   }
 //+------------------------------------------------------------------+
