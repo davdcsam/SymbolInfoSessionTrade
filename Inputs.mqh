@@ -7,7 +7,7 @@ input datetime inpDtEnd = D'2026.01.01 00:00:00'; // End
 
 input group "File Destination";
 
-input string inpFileName = "example.csv"; // File Name
+input string inpFileName = "Symbol()"; // File Name
 
 input bool inpFilesCommon = true; // Save in Common/Files
 //+------------------------------------------------------------------+
